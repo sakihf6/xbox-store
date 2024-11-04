@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta - Xbox Store</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Navbar -->
+    <nav class="bg-black/90 backdrop-blur-md fixed w-full z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="/api/placeholder/40/40" alt="Logo" class="h-10">
+                    <span class="ml-3 text-xl font-bold text-green-500">Mi Cuenta - Xbox Store</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('index') }}" class="text-gray-400 hover:text-green-500 transition">
+                        <i class="fas fa-store mr-2"></i>
+                        Ver Tienda
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="text-red-500 hover:text-red-400 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container mx-auto px-6 pt-24 pb-12">
+        <!-- Tarjeta de Bienvenida -->
+        <div class="bg-gradient-to-r from-green-600 to-green-800 rounded-xl p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold mb-2">¡Bienvenido, {{ current_user.username }}!</h1>
+                    <p class="text-gray-200">Aquí puedes gestionar tu cuenta y canjear códigos.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-200">Tu saldo actual</p>
+                    <p class="text-3xl font-bold">${{ "%.2f"|format(current_user.credit) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Sección de Canje de Códigos -->
+            <div class="bg-gray-800 rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-gift text-2xl text-green-500 mr-3"></i>
+                    <h2 class="text-2xl font-bold">Canjear Código</h2>
+                </div>
+                
+                <form action="{{ url_for('redeem_code') }}" method="POST" class="space-y-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div>
+                        <label class="block text-gray-300 mb-2" for="code">Ingresa tu código</label>
+                        <input type="text" id="code" name="code" 
+                               class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                               required placeholder="Ejemplo: XBOX-1234-5678">
+                    </div>
+                    <button type="submit" 
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Canjear Código
+                    </button>
+                </form>
+
+                <div class="mt-4 p-4 bg-gray-700/50 rounded-lg">
+                    <h3 class="font-bold mb-2 flex items-center">
+                        <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                        ¿Cómo funciona?
+                    </h3>
+                    <ol class="list-decimal list-inside text-gray-300 space-y-2 text-sm">
+                        <li>Ingresa el código que recibiste</li>
+                        <li>Haz clic en "Canjear Código"</li>
+                        <li>El saldo se agregará automáticamente a tu cuenta</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Historial de Canjes -->
+            <div class="bg-gray-800 rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-history text-2xl text-green-500 mr-3"></i>
+                    <h2 class="text-2xl font-bold">Historial de Canjes</h2>
+                </div>
+
+                <div class="space-y-4">
+                    {% set codes = RedeemCode.query.filter_by(used_by=current_user.id).order_by(RedeemCode.used_at.desc()).all() %}
+                    {% if codes %}
+                        {% for code in codes %}
+                            <div class="bg-gray-700/50 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="text-green-500 font-bold text-lg">
+                                            ${{ "%.2f"|format(code.amount) }}
+                                        </span>
+                                        <p class="text-sm text-gray-400">
+                                            {{ code.used_at.strftime('%d/%m/%Y %H:%M') }}
+                                        </p>
+                                    </div>
+                                    <span class="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-sm">
+                                        Canjeado
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-8 text-gray-400">
+                            <i class="fas fa-scroll text-4xl mb-4"></i>
+                            <p>No hay códigos canjeados aún</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'flash_messages.html' %}
+
+    <script>
+        // Auto-ocultar mensajes flash después de 5 segundos
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.bg-green-500, .bg-red-500');
+            flashMessages.forEach(message => {
+                message.style.opacity = '0';
+                message.style.transition = 'opacity 0.5s ease-in-out';
+                setTimeout(() => message.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

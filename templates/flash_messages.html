@@ -1,0 +1,23 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="fixed bottom-4 right-4 z-50">
+            {% for category, message in messages %}
+                <div class="bg-{{ 'green' if category == 'success' else 'red' }}-500 text-white px-6 py-4 rounded-lg shadow-lg mb-4">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<script>
+    // Auto-ocultar mensajes flash
+    setTimeout(() => {
+        const flashMessages = document.querySelectorAll('.bg-green-500, .bg-red-500');
+        flashMessages.forEach(message => {
+            message.style.opacity = '0';
+            message.style.transition = 'opacity 0.5s ease-in-out';
+            setTimeout(() => message.remove(), 500);
+        });
+    }, 5000);
+</script>

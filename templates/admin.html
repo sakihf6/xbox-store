@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Xbox Store</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+    <nav class="bg-black/90 backdrop-blur-md fixed w-full z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="/api/placeholder/40/40" alt="Logo" class="h-10">
+                    <span class="ml-3 text-xl font-bold text-green-500">Panel Admin - Xbox Store</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-400 hover:text-green-500 transition">
+                        <i class="fas fa-store mr-2"></i>
+                        Ver Tienda
+                    </a>
+                    <a href="/admin/logout" class="text-red-500 hover:text-red-400 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 pt-24 pb-12">
+        <div class="bg-gray-800 rounded-xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Gestionar Productos</h2>
+                <a href="/product/add" 
+                   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nuevo Producto
+                </a>
+            </div>
+            
+            <div class="grid gap-6">
+                {% for product in products %}
+                <div class="bg-gray-900 rounded-lg p-6 border border-gray-700">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-2">{{ product.name }}</h3>
+                            <p class="text-gray-400 mb-2">{{ product.description }}</p>
+                            <div class="text-gray-400">
+                                <strong class="text-green-500">Características:</strong>
+                                <ul class="list-disc ml-5 mt-2">
+                                    {% for feature in product.features.split('\n') %}
+                                    <li>{{ feature }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="ml-6 flex flex-col items-end">
+                            <span class="text-2xl font-bold text-green-500 mb-4">${{ "%.2f"|format(product.price) }}</span>
+                            <div class="flex space-x-2">
+                                <a href="/product/edit/{{ product.id }}" 
+                                   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                                    <i class="fas fa-edit mr-2"></i>
+                                    Editar
+                                </a>
+                                <a href="#" onclick="confirmDelete('{{ product.id }}')" 
+                                   class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition">
+                                    <i class="fas fa-trash-alt mr-2"></i>
+                                    Eliminar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Confirmar Eliminación</h3>
+            <p class="mb-6">¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="hideDeleteModal()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="POST" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                        Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed bottom-4 right-4 z-50">
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'green' if category == 'success' else 'red' }}-500 text-white px-6 py-4 rounded-lg shadow-lg mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <script>
+        function confirmDelete(productId) {
+            const modal = document.getElementById('deleteModal');
+            const deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = `/product/delete/${productId}`;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Auto-ocultar mensajes flash
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.bg-green-500, .bg-red-500');
+            flashMessages.forEach(message => {
+                message.style.opacity = '0';
+                message.style.transition = 'opacity 0.5s ease-in-out';
+                setTimeout(() => message.remove(), 500);
+            });
+        }, 5000);
+
+        // Cerrar modal con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideDeleteModal();
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideDeleteModal();
+            }
+        });
+    </script>
+</body>
+</html>

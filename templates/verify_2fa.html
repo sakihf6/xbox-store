@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación en Dos Pasos - Xbox Store</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="min-h-screen flex items-center justify-center pt-20">
+        <div class="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md mx-4">
+            <div class="text-center mb-6">
+                <i class="fas fa-shield-alt text-4xl text-green-500 mb-4"></i>
+                <h2 class="text-2xl font-bold">Verificación de Seguridad</h2>
+                <p class="text-gray-400 mt-2">Ingresa el código de 6 dígitos para continuar</p>
+            </div>
+
+            <div class="bg-gray-700/50 p-4 rounded-lg mb-6">
+                <div class="text-center">
+                    <p class="text-sm text-gray-400 mb-2">Tu código de autenticación:</p>
+                    <p class="font-mono text-2xl text-green-500" id="securityCode">------</p>
+                </div>
+            </div>
+            
+            <form method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div>
+                    <label class="block text-gray-300 mb-2" for="code">
+                        Código de Verificación
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="code" name="code" required
+                               class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white text-center text-2xl font-mono tracking-widest focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                               maxlength="6"
+                               pattern="\d{6}"
+                               placeholder="000000"
+                               autocomplete="off">
+                    </div>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-arrow-right mr-2"></i>
+                    Verificar
+                </button>
+            </form>
+
+            <div class="mt-6 p-4 bg-gray-700/30 rounded-lg">
+                <h3 class="font-bold mb-2 flex items-center text-sm">
+                    <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+                    Importante
+                </h3>
+                <p class="text-sm text-gray-400">
+                    El código cambia cada 30 segundos. Espera a que aparezca un nuevo código si el actual no funciona.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        async function getSecurityCode() {
+            try {
+                const response = await fetch('/get-security-code');
+                const data = await response.json();
+                document.getElementById('securityCode').textContent = data.code;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Actualizar código cada 30 segundos
+        getSecurityCode();
+        setInterval(getSecurityCode, 30000);
+
+        // Formateo automático del input
+        document.getElementById('code').addEventListener('input', function(e) {
+            // Remover caracteres no numéricos
+            this.value = this.value.replace(/[^\d]/g, '');
+            
+            // Limitar a 6 dígitos
+            if (this.value.length > 6) {
+                this.value = this.value.slice(0, 6);
+            }
+        });
+    </script>
+
+    {% include 'flash_messages.html' %}
+</body>
+</html>
