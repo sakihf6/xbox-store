@@ -11,6 +11,10 @@ import random
 import string
 from datetime import datetime, timedelta
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 database_url = os.environ.get('DATABASE_URL', "postgresql://xbox_m4o1_user:rRieocXzonRdTslrkyDRfgrPp5a1Sc02@dpg-ctuphf56l47c738nk2h0-a.oregon-postgres.render.com/xbox_m4o1")
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -26,10 +30,6 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'user_login'
 csrf = CSRFProtect(app)
-
-@app.before_first_request
-def create_tables():
-    db.create_all()
 
 # Modelos
 class User(UserMixin, db.Model):
