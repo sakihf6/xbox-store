@@ -11,10 +11,13 @@ import random
 import string
 from datetime import datetime, timedelta
 
-
+database_url = os.environ.get('DATABASE_URL', "postgresql://xbox_m4o1_user:rRieocXzonRdTslrkyDRfgrPp5a1Sc02@dpg-ctuphf56l47c738nk2h0-a.oregon-postgres.render.com/xbox_m4o1")
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('sakih11F', 'dev-key')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tienda.db')
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://')
@@ -149,6 +152,10 @@ class Order(db.Model):
         }
         return status_display.get(self.status, self.status)
 
+
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 # Agrega estas rutas para manejar las ofertas
 @app.route('/admin/offers')
@@ -845,9 +852,10 @@ def create_initial_products():
 
 if __name__ == '__main__':
     with app.app_context():
-        
+        # Crea todas las tablas
+        db.create_all()
 
-        # Crear usuario admin inicial
+        # Crear usuario admin inicial si no existe
         if not User.query.filter_by(username='sakih').first():
             user = User(
                 username='sakih',
