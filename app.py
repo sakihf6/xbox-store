@@ -11,10 +11,17 @@ import random
 import string
 from datetime import datetime, timedelta
 
+from flask import Flask
+
 app = Flask(__name__)
+
 @app.before_first_request
-def create_tables():
-    db.create_all()
+def before_first_request_func():
+    print("Esta función se ejecuta antes de la primera petición.")
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
 
 database_url = os.environ.get('DATABASE_URL', "postgresql://xbox_m4o1_user:rRieocXzonRdTslrkyDRfgrPp5a1Sc02@dpg-ctuphf56l47c738nk2h0-a.oregon-postgres.render.com/xbox_m4o1")
 if database_url.startswith("postgres://"):
