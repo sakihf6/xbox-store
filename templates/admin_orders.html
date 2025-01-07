@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Administración de Pedidos - Xbox Store{% endblock %}
+
+{% block content %}
+<!-- Barra lateral de navegación -->
+<div class="fixed left-0 top-0 h-full w-64 bg-gray-800 pt-20 border-r border-gray-700">
+    <div class="px-4 py-6">
+        <nav class="space-y-2">
+            <a href="{{ url_for('admin') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-green-500 rounded-lg transition">
+                <i class="fas fa-tachometer-alt w-5 h-5 mr-3"></i>
+                Dashboard
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="flex items-center px-4 py-3 bg-gray-700 text-green-500 rounded-lg">
+                <i class="fas fa-shopping-cart w-5 h-5 mr-3"></i>
+                Pedidos
+            </a>
+            <a href="{{ url_for('admin_codes') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-green-500 rounded-lg transition">
+                <i class="fas fa-gift w-5 h-5 mr-3"></i>
+                Códigos
+            </a>
+            <a href="{{ url_for('admin_users') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-green-500 rounded-lg transition">
+                <i class="fas fa-users w-5 h-5 mr-3"></i>
+                Usuarios
+            </a>
+        </nav>
+    </div>
+</div>
+
+<!-- Contenido principal -->
+<div class="pl-64">
+    <div class="p-8">
+        <div class="mb-6 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white">Gestión de Pedidos</h1>
+            
+            <!-- Filtros -->
+            <div class="flex gap-2">
+                <select id="statusFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 border border-gray-600">
+                    <option value="all">Todos los estados</option>
+                    <option value="pending">Pendientes</option>
+                    <option value="processing">En proceso</option>
+                    <option value="completed">Completados</option>
+                    <option value="cancelled">Cancelados</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tabla de Pedidos -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-900">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                ID Pedido
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Usuario
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Monto
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Método de Pago
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Estado
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Fecha
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Cuenta
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        {% for order in orders %}
+                        <tr class="hover:bg-gray-700/50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-mono">#{{ order.id }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm">{{ order.user.username }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-green-500 font-bold">${{ "%.2f"|format(order.total_amount) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm">
+                                    {% if order.payment_method == 'credit' %}
+                                        <i class="fas fa-wallet text-blue-500 mr-1"></i> Créditos
+                                    {% elif order.payment_method == 'binance' %}
+                                        <i class="fab fa-bitcoin text-yellow-500 mr-1"></i> Binance USDT
+                                    {% else %}
+                                        <i class="fas fa-university text-purple-500 mr-1"></i> Transferencia/OXXO
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <select onchange="updateStatus({{ order.id }}, this.value)" 
+                                        class="bg-gray-700 text-sm rounded px-3 py-1 border border-gray-600
+                                        {% if order.status == 'completed' %}text-green-500
+                                        {% elif order.status == 'cancelled' %}text-red-500
+                                        {% elif order.status == 'processing' %}text-yellow-500
+                                        {% else %}text-white{% endif %}">
+                                    <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>
+                                        📝 Pendiente
+                                    </option>
+                                    <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>
+                                        ⚙️ Procesando
+                                    </option>
+                                    <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>
+                                        ✅ Completado
+                                    </option>
+                                    <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>
+                                        ❌ Cancelado
+                                    </option>
+                                </select>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-400">
+                                    {{ order.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if order.status == 'completed' %}
+                                    {% if order.account_details %}
+                                        <button onclick="editAccount({{ order.id }}, `{{ order.account_details|replace('\n', '\\n') }}`)" 
+                                                class="text-blue-500 hover:text-blue-400">
+                                            <i class="fas fa-edit mr-1"></i>
+                                            Editar
+                                        </button>
+                                    {% else %}
+                                        <button onclick="addAccount({{ order.id }})" 
+                                                class="text-green-500 hover:text-green-400">
+                                            <i class="fas fa-key mr-1"></i>
+                                            Agregar
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="showOrderDetails({{ order.id }})" 
+                                        class="text-blue-500 hover:text-blue-400">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    Ver
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not orders %}
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fas fa-shopping-cart text-4xl mb-4"></i>
+                    <p>No hay pedidos disponibles</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cuenta -->
+<div id="accountModal" class="fixed inset-0 bg-black bg-opacity-50 hidden backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold mb-4">
+            <i class="fas fa-key text-green-500 mr-2"></i>
+            <span id="accountModalTitle">Agregar Cuenta</span>
+        </h3>
+        <form id="accountForm" class="space-y-4">
+            <input type="hidden" id="orderIdInput" name="orderId">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">
+                    Detalles de la Cuenta
+                </label>
+                <textarea 
+                    id="accountDetails" 
+                    name="accountDetails"
+                    rows="4"
+                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-green-500 focus:ring-2 focus:ring-green-500"
+                    placeholder="Email:&#10;Contraseña:&#10;Notas adicionales:"></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" 
+                        onclick="closeAccountModal()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500">
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Detalles -->
+<div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 max-w-2xl w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Detalles del Pedido</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="orderDetails" class="space-y-4">
+            <!-- Los detalles se cargarán dinámicamente -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función para actualizar el estado del pedido
+async function updateStatus(orderId, status) {
+    try {
+        const response = await fetch(`/admin/order/${orderId}/update-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ status })
+        });
+        
+        if (response.ok) {
+            showMessage('Estado actualizado correctamente', 'success');
+        } else {
+            showMessage('Error al actualizar el estado', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error al actualizar el estado', 'error');
+    }
+}
+
+// Funciones para el modal de cuenta
+function addAccount(orderId) {
+    document.getElementById('accountModalTitle').textContent = 'Agregar Cuenta';
+    document.getElementById('orderIdInput').value = orderId;
+    document.getElementById('accountDetails').value = '';
+    document.getElementById('accountModal').classList.remove('hidden');
+}
+
+function editAccount(orderId, accountDetails) {
+    document.getElementById('accountModalTitle').textContent = 'Editar Cuenta';
+    document.getElementById('orderIdInput').value = orderId;
+    document.getElementById('accountDetails').value = accountDetails;
+    document.getElementById('accountModal').classList.remove('hidden');
+}
+
+function closeAccountModal() {
+    document.getElementById('accountModal').classList.add('hidden');
+    document.getElementById('accountForm').reset();
+}
+
+// Manejo del formulario de cuenta
+document.getElementById('accountForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const orderId = document.getElementById('orderIdInput').value;
+    const accountDetails = document.getElementById('accountDetails').value;
+
+    try {
+        const response = await fetch(`/admin/order/${orderId}/add-account`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ accountDetails })
+        });
+
+        if (response.ok) {
+            showMessage('Cuenta actualizada correctamente', 'success');
+            closeAccountModal();
+            // Recargar la página para mostrar los cambios
+            location.reload();
+        } else {
+            showMessage('Error al actualizar la cuenta', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error al actualizar la cuenta', 'error');
+    }
+});
+
+// Función para mostrar mensajes
+function showMessage(message, type = 'success') {
+    const div = document.createElement('div');
+    div.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white transition-opacity duration-300 ${
+        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`;
+    div.textContent = message;
+    document.body.appendChild(div);
+    
+    setTimeout(() => {
+        div.style.opacity = '0';
+        setTimeout(() => div.remove(), 300);
+    }, 3000);
+}
+
+// Filtrado de pedidos
+document.getElementById('statusFilter').addEventListener('change', function() {
+    const status = this.value;
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const statusSelect = row.querySelector('select');
+        if (status === 'all' || statusSelect.value === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';}
+    });
+});
+
+// Funciones para el modal de detalles
+async function showOrderDetails(orderId) {
+    try {
+        const response = await fetch(`/admin/order/${orderId}/details`);
+        const data = await response.json();
+        
+        const detailsHtml = `
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-400 text-sm">ID de Pedido:</p>
+                        <p class="font-mono">#${data.order.id}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Usuario:</p>
+                        <p>${data.user.username}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Monto:</p>
+                        <p class="text-green-500 font-bold">$${data.order.total_amount}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Método de Pago:</p>
+                        <p>${data.order.payment_method}</p>
+                    </div>
+                </div>
+            </div>
+
+            ${data.order.account_details ? `
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                <h4 class="font-bold text-green-500 mb-2">Detalles de la Cuenta</h4>
+                <pre class="text-sm text-white whitespace-pre-wrap">${data.order.account_details}</pre>
+            </div>
+            ` : ''}
+
+            <div class="bg-gray-700 rounded-lg p-4">
+                <h4 class="font-bold mb-2">Detalles de Pago</h4>
+                <p class="text-sm text-gray-300">${data.order.payment_details || 'Sin detalles adicionales'}</p>
+            </div>
+        `;
+        
+        document.getElementById('orderDetails').innerHTML = detailsHtml;
+        document.getElementById('orderModal').classList.remove('hidden');
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error al cargar los detalles del pedido', 'error');
+    }
+}
+
+function closeModal() {
+    document.getElementById('orderModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

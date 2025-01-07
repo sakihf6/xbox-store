@@ -3,44 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xbox Store - Suscripciones Premium</title>
+    <title>FINNGGAMES - Tienda virtual</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .hero-gradient {
-            background: linear-gradient(135deg, #107C10 0%, #0E5E0E 100%);
+        :root {
+            --dark-bg: #010b1c;
+            --card-bg: #021529;
+            --accent: #0c2d61;
+            --text: #c1e8ff;
+            --highlight: #5483B3;
         }
-        .card-hover:hover {
+
+        body {
+            background: var(--dark-bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid rgba(84, 131, 179, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
             transform: translateY(-5px);
-            transition: transform 0.3s ease;
+            border-color: var(--highlight);
+            box-shadow: 0 0 20px rgba(84, 131, 179, 0.2);
         }
-        .modal {
-            transition: opacity 0.3s ease-in-out;
+
+        .price-badge {
+            background: linear-gradient(45deg, var(--accent), var(--highlight));
+            border: 2px solid rgba(193, 232, 255, 0.1);
         }
-        .modal-content {
-            transform: scale(0.95);
-            transition: transform 0.3s ease-in-out;
+
+        .feature-check {
+            color: var(--highlight);
+            text-shadow: 0 0 10px rgba(84, 131, 179, 0.5);
         }
-        .modal.active .modal-content {
-            transform: scale(1);
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent), var(--highlight));
+            border: 1px solid var(--highlight);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(84, 131, 179, 0.3);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 20px rgba(193, 232, 255, 0.3);
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .glass-effect {
+            background: rgba(5, 38, 89, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(84, 131, 179, 0.2);
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body>
+
     <!-- Navbar -->
-    <nav class="bg-black/90 backdrop-blur-md fixed w-full z-50">
+<nav class="bg-black/90 backdrop-blur-md fixed w-full z-50">
         <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-                    <img src="/api/placeholder/40/40" alt="Logo" class="h-10">
-                    <span class="ml-3 text-xl font-bold text-green-500">Xbox Store</span>
+                    <i class="fa-brands fa-xbox text-2xl text-[#7DA0CA]"></i>
+                    <span class="text-4xl md:text-2xl font-bold text-[#C1E8FF] text-glow">FINNGGAMES</span>
                 </div>
                 <div class="flex items-center space-x-8">
                     <div class="hidden md:flex items-center space-x-8">
-                        <a href="#inicio" class="hover:text-green-500 transition">Inicio</a>
-                        <a href="#planes" class="hover:text-green-500 transition">Planes</a>
-                        <a href="#beneficios" class="hover:text-green-500 transition">Beneficios</a>
-                        <a href="#contacto" class="hover:text-green-500 transition">Contacto</a>
+                        
+                       <!-- En el nav, reemplaza el enlace del carrito con este código -->
+<a href="{{ url_for('view_cart') }}" 
+class="relative text-[#7DA0CA] hover:text-[#c1e8ff] transition-all group">
+ <div class="flex items-center">
+     <i class="fas fa-shopping-cart mr-2"></i>
+     <span>Carrito</span>
+     {% if cart and cart.items %}
+         <span class="absolute -top-2 -right-2 bg-[#5483B3] text-[#c1e8ff] text-xs w-5 h-5 flex items-center justify-center rounded-full">
+             {{ cart.items|length }}
+         </span>
+     {% endif %}
+ </div>
+</a>
+                        
+                        
                     </div>
                     
                     {% if current_user.is_authenticated %}
@@ -77,90 +139,93 @@
             </div>
         </div>
     </nav>
+    
 
     <!-- Hero Section -->
-    <section id="inicio" class="hero-gradient pt-28 pb-20">
-        <div class="container mx-auto px-6">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div>
-                    <h1 class="text-5xl font-bold mb-6">Descubre el Mundo Xbox</h1>
-                    <p class="text-xl mb-8 text-gray-200">Accede a cientos de juegos premium con nuestras suscripciones. Juega sin límites, compite online y disfruta de contenido exclusivo.</p>
-                    <a href="#planes" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full inline-flex items-center transition duration-300">
-                        Ver Planes
-                        <i class="fas fa-chevron-right ml-2"></i>
-                    </a>
-                </div>
-                <div class="relative">
-                    <div class="absolute inset-0 bg-gradient-to-br from-green-500/20 to-transparent rounded-2xl"></div>
-                    <img src="/api/placeholder/600/400" alt="Xbox Games" class="rounded-2xl shadow-2xl w-full">
-                </div>
+    <div class="pt-20 pb-12">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16 space-y-4">
+                <h1 class="text-4xl md:text-5xl font-bold text-[#C1E8FF] text-glow">
+                    Nuestros Planes
+                </h1>
+                <p class="text-[#7DA0CA] text-xl max-w-2xl mx-auto">
+                    Elige el plan que mejor se adapte a ti y comienza a disfrutar de los mejores juegos
+                </p>
             </div>
-        </div>
-    </section>
 
-    <!-- Planes Section -->
-    <section id="planes" class="py-20 bg-gray-800">
-        <div class="container mx-auto px-6">
-            <h2 class="text-4xl font-bold text-center mb-16">Nuestros Planes</h2>
+            <!-- Planes Grid -->
             <div class="grid md:grid-cols-3 gap-8">
                 {% for product in products %}
-                <div class="bg-gray-900 rounded-2xl p-8 border border-green-500/30 card-hover">
-                    <div class="text-green-500 text-xl mb-4">
-                        <i class="fas fa-crown"></i>
+                <div class="card rounded-2xl p-8 floating">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <div class="bg-[#0c2d61] p-3 rounded-lg inline-block mb-4">
+                                <i class="fas fa-crown text-2xl text-[#5483B3]"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-[#C1E8FF]">{{ product.name }}</h3>
+                            <p class="text-[#7DA0CA] mt-2">{{ product.get_time_remaining() }}</p>
+                        </div>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4">{{ product.name }}</h3>
-                    <p class="text-gray-400 mb-6">{{ product.description }}</p>
-                    <div class="text-3xl font-bold mb-6">
-                        ${{ "%.2f"|format(product.price) }} <span class="text-sm text-gray-400">/ mes</span>
+
+                    <div class="price-badge rounded-lg p-4 mb-8">
+                        <span class="text-3xl font-bold text-[#C1E8FF]">${{ "%.2f"|format(product.price) }}</span>
                     </div>
-                    <ul class="mb-8 space-y-3">
+
+                    <ul class="space-y-4 mb-8">
                         {% for feature in product.features.split('\n') %}
-                        <li class="flex items-center">
-                            <i class="fas fa-check text-green-500 mr-2"></i>
-                            {{ feature }}
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-[#5483B3] mr-3 mt-1"></i>
+                            <span class="text-[#7DA0CA]">{{ feature }}</span>
                         </li>
                         {% endfor %}
                     </ul>
-                    <a href="{{ product.whatsapp_link }}" 
-                       class="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 px-4 rounded-lg transition duration-300">
-                        <i class="fab fa-whatsapp mr-2"></i>
-                        Obtener Ahora
-                    </a>
+
+                    <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" 
+                                class="btn-primary w-full py-3 rounded-lg text-[#C1E8FF] font-semibold hover:bg-[#5483B3] transition-all">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Agregar al carrito
+                        </button>
+                    </form>
                 </div>
                 {% endfor %}
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- Beneficios Section -->
-    <section id="beneficios" class="py-20 bg-gray-900">
+    <div class="text-center">
+    <section id="beneficios" class="py-20 bg-withe-900">
         <div class="container mx-auto px-6">
-            <h2 class="text-4xl font-bold text-center mb-16">¿Por qué elegirnos?</h2>
+            <h1 class="text-4xl md:text-5xl font-bold text-[#C1E8FF] text-glow">
+                ¿Por qué elegirnos?
+            </h1>
             <div class="grid md:grid-cols-4 gap-8">
                 <div class="text-center">
                     <div class="bg-green-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-bolt text-2xl text-green-500"></i>
+                        <i class="fas fa-bolt text-2xl text-white-500"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-2">Activación Instantánea</h3>
                     <p class="text-gray-400">Comienza a jugar en minutos</p>
                 </div>
                 <div class="text-center">
                     <div class="bg-green-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-headset text-2xl text-green-500"></i>
+                        <i class="fas fa-headset text-2xl text-white-500"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-2">Soporte 24/7</h3>
                     <p class="text-gray-400">Siempre disponibles para ti</p>
                 </div>
                 <div class="text-center">
                     <div class="bg-green-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-shield-alt text-2xl text-green-500"></i>
+                        <i class="fas fa-shield-alt text-2xl text-white-500"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-2">100% Seguro</h3>
                     <p class="text-gray-400">Garantía de funcionamiento</p>
                 </div>
                 <div class="text-center">
                     <div class="bg-green-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-tags text-2xl text-green-500"></i>
+                        <i class="fas fa-tags text-2xl text-white-500"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-2">Mejores Precios</h3>
                     <p class="text-gray-400">Ofertas imbatibles</p>
@@ -169,92 +234,18 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer id="contacto" class="bg-black py-12">
-        <div class="container mx-auto px-6">
-            <div class="grid md:grid-cols-4 gap-8">
-                <div>
-                    <h4 class="text-xl font-bold mb-4">Xbox Store</h4>
-                    <p class="text-gray-400">Tu destino para todas las suscripciones de Xbox.</p>
-                </div>
-                <div>
-                    <h4 class="text-xl font-bold mb-4">Enlaces Rápidos</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#inicio" class="text-gray-400 hover:text-green-500">Inicio</a></li>
-                        <li><a href="#planes" class="text-gray-400 hover:text-green-500">Planes</a></li>
-                        <li><a href="#beneficios" class="text-gray-400 hover:text-green-500">Beneficios</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-xl font-bold mb-4">Contacto</h4>
-                    <ul class="space-y-2">
-                        <li class="text-gray-400">
-                            <i class="fab fa-whatsapp mr-2"></i>
-                            WhatsApp: [Tu número]
-                        </li>
-                        <li class="text-gray-400">
-                            <i class="fas fa-envelope mr-2"></i>
-                            Email: [Tu email]
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-xl font-bold mb-4">Síguenos</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-green-500">
-                            <i class="fab fa-facebook text-2xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-green-500">
-                            <i class="fab fa-instagram text-2xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-green-500">
-                            <i class="fab fa-twitter text-2xl"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-                <p>&copy; 2024 Xbox Store. Todos los derechos reservados.</p>
-            </div>
+    <div class="text-center mt-8">
+        <a href="https://www.facebook.com/share/p/1H9M4q1Mmr/" 
+           target="_blank"
+           class="inline-flex items-center space-x-2 bg-[#0c2d61] hover:bg-[#5483B3] text-[#C1E8FF] px-6 py-3 rounded-lg transition-all border border-[#5483B3]">
+            <i class="fab fa-facebook text-xl"></i>
+            <span>REFERENCIAS EN FACEBOOK</span>
+        </a>
+    </div>
+
+ <!-- Footer -->
+ <section id="copy" class="py-0 bg-black-900">
+        <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 FINNGGAMES. Todos los derechos reservados.</p>
         </div>
-    </footer>
-
-    <!-- Mensajes Flash -->
-    {% include 'flash_messages.html' %}
-
-    <script>
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-
-        // Animación para cards
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.card-hover').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-            observer.observe(card);
-        });
-    </script>
-</body>
-</html>
+    </div>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Xbox Store</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+    <nav class="bg-black/90 backdrop-blur-md fixed w-full z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="bi bi-shield-shaded"></i>
+                    <span class="ml-3 text-xl font-bold text-green-500">Panel Admin - Usuarios</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('admin') }}" class="text-gray-400 hover:text-green-500 transition">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver al Panel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 pt-24 pb-12">
+        <div class="bg-gray-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Gestión de Usuarios</h2>
+                <span class="text-sm text-gray-400">
+                    Total: {{ users|length }} usuarios
+                </span>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Usuario</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Saldo</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        {% for user in users %}
+                        <tr class="hover:bg-gray-700/50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 flex-shrink-0 bg-gray-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-300"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium">{{ user.username }}</div>
+                                        <div class="text-sm text-gray-400">ID: {{ user.id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if user.is_admin %}bg-purple-100 text-purple-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ 'Administrador' if user.is_admin else 'Usuario' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="font-mono">${{ "%.2f"|format(user.credit) }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                {% if not user.is_admin %}
+                                <button onclick="showEditModal('{{ user.id }}', '{{ user.username }}', '{{ user.credit }}')"
+                                        class="text-blue-400 hover:text-blue-300 transition">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edición -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md mx-4 w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="modalTitle">Editar Saldo</h3>
+                <button onclick="hideEditModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="editForm" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div>
+                    <label class="block text-gray-300 mb-2" for="credit">Nuevo Saldo ($)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-3 text-gray-400">$</span>
+                        <input type="number" step="0.01" id="credit" name="credit"
+                               class="w-full pl-8 pr-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                               required>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" onclick="hideEditModal()"
+                            class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function showEditModal(userId, username, currentCredit) {
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            const title = document.getElementById('modalTitle');
+            const creditInput = document.getElementById('credit');
+
+            title.textContent = `Editar Saldo - ${username}`;
+            form.action = `/admin/user/edit/${userId}`;
+            creditInput.value = currentCredit;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            creditInput.focus();
+        }
+
+        function hideEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Cerrar modal con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideEditModal();
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideEditModal();
+            }
+        });
+        
+    </script>
+
+    {% include 'flash_messages.html' %}
+
+    
+</body>
+</html>

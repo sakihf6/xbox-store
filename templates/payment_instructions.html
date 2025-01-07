@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Instrucciones de Pago - Xbox Store{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 pt-24 pb-12">
+    <div class="max-w-4xl mx-auto">
+        <!-- Encabezado -->
+        <div class="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
+            <h1 class="text-2xl font-bold mb-2">Instrucciones de Pago</h1>
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-400">Pedido #{{ order.id }}</p>
+                    <p class="text-sm text-gray-400">{{ order.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-400">Total a pagar</p>
+                    <p class="text-3xl font-bold text-green-500">${{ "%.2f"|format(order.total_amount) }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if order.payment_method == 'bank_transfer' %}
+        <div class="space-y-6">
+            <!-- Sección de Transferencia Bancaria -->
+            <div class="bg-gray-700 rounded-lg p-6">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-university text-green-500 mr-3"></i>
+                    Transferencia Bancaria (SPEI)
+                </h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-400">Banco:</p>
+                        <p class="font-bold">BBVA</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Titular:</p>
+                        <p class="font-bold">Gustavo Gatica</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Tarjeta/Clabe:</p>
+                        <div class="bg-gray-800 p-2 rounded flex justify-between items-center">
+                            <code class="font-mono">4152314371434021</code>
+                            <button onclick="copyToClipboard('0123456789')" class="text-blue-400 hover:text-blue-300">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Concepto:</p>
+                        <div class="bg-gray-800 p-2 rounded flex justify-between items-center">
+                            <code class="font-mono">Pedido #</code>
+                            <button onclick="copyToClipboard('012345678901234567')" class="text-blue-400 hover:text-blue-300">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Depósito OXXO -->
+            <div class="bg-gray-700 rounded-lg p-6">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-store text-red-500 mr-3"></i>
+                    Depósito en OXXO
+                </h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-400">Banco:</p>
+                        <p class="font-bold">OXXO/SPIN</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Código de depósito:</p>
+                        <p class="font-bold">2242 1702 6003 8181</p>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Referencia de pago común para ambos métodos -->
+
+            <!-- Instrucciones importantes -->
+            <div class="bg-yellow-900/20 border border-yellow-500/20 rounded-lg p-4">
+                <h4 class="font-bold text-yellow-500 mb-2">Importante:</h4>
+                <ul class="list-disc list-inside space-y-1 text-gray-300 text-sm">
+                    <li>Monto exacto a pagar: ${{ "%.2f"|format(order.total_amount) }}</li>
+                    <li>Incluye la referencia de pago en los comentarios de la transferencia</li>
+                    <li>Conserva tu comprobante de pago</li>
+                    <li>Envía una foto del comprobante por WhatsApp</li>
+                </ul>
+            </div>
+        </div>
+
+        {% elif order.payment_method == 'binance' %}
+        <!-- Sección de pago con Binance -->
+        <div class="space-y-6">
+            <div class="bg-gray-700 rounded-lg p-6">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fab fa-bitcoin text-yellow-500 mr-3"></i>
+                    Pago con Binance (USDT)
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-400">Red:</p>
+                        <p class="font-bold">TRC20</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Dirección USDT:</p>
+                        <div class="bg-gray-800 p-2 rounded flex justify-between items-center">
+                            <code class="font-mono break-all">TTBJ9sqe7VpRVC6DhMP92kr5rwncm3rjTj</code>
+                            <button onclick="copyToClipboard('TU_DIRECCION_BINANCE')" class="text-blue-400 hover:text-blue-300 ml-2">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Cantidad en USDT:</p>
+                        <p class="text-2xl font-bold text-green-500">${{ "%.2f"|format(order.total_amount / 20) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instrucciones para Binance -->
+            <div class="bg-yellow-900/20 border border-yellow-500/20 rounded-lg p-4">
+                <h4 class="font-bold text-yellow-500 mb-2">Importante:</h4>
+                <ul class="list-disc list-inside space-y-1 text-gray-300 text-sm">
+                    <li>Usa únicamente la red TRC20</li>
+                    <li>Envía el monto exacto en USDT</li>
+                    <li>Incluye el número de orden ({{ order.id }}) en el memo</li>
+                    <li>Envía captura de la transacción por WhatsApp</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Información de contacto -->
+        <div class="mt-8 bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+            <h3 class="font-bold text-green-500 flex items-center mb-2">
+                <i class="fab fa-whatsapp mr-2"></i>
+                Envía tu comprobante
+            </h3>
+            <p class="text-gray-300">Una vez realizado el pago, envía tu comprobante por WhatsApp:</p>
+            <a href="https://wa.me/+5217541085151?text=Hola,he realizado un pedido en la pagina de **FINNGGAMES**, te adjunto el comprobante mi pedido #{{ order.id }}" 
+               target="_blank"
+               class="mt-2 inline-block text-green-500 hover:text-green-400">
+                <i class="fab fa-whatsapp mr-1"></i>
+                +52 7541085151
+            </a>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="mt-8 flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-gray-400 hover:text-white">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Volver a la tienda
+            </a>
+            <a href="{{ url_for('user_orders') }}" class="text-blue-400 hover:text-blue-300">
+                Ver mis pedidos
+                <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showMessage('Copiado al portapapeles', 'success');
+    }).catch(() => {
+        showMessage('Error al copiar', 'error');
+    });
+}
+
+function showMessage(message, type = 'success') {
+    const div = document.createElement('div');
+    div.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white transition-opacity duration-300 ${
+        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`;
+    div.textContent = message;
+    document.body.appendChild(div);
+    
+    setTimeout(() => {
+        div.style.opacity = '0';
+        setTimeout(() => div.remove(), 300);
+    }, 3000);
+}
+</script>
+{% endblock %}

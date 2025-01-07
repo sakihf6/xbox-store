@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Pedidos - Xbox Store{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 pt-24 pb-12">
+    <!-- Encabezado -->
+    <div class="bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-6 mb-8">
+        <h1 class="text-2xl font-bold mb-2">Mis Pedidos</h1>
+        <p class="text-gray-300">Revisa el estado de tus pedidos y los detalles de tus cuentas</p>
+    </div>
+
+    {% if orders %}
+    <div class="grid gap-6">
+        {% for order in orders %}
+        <div class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+            <!-- Encabezado del pedido -->
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-sm text-gray-400">Pedido #{{ order.id }}</span>
+                            <span class="px-3 py-1 rounded-full text-sm
+                                {% if order.status == 'completed' %}bg-green-500/20 text-green-500
+                                {% elif order.status == 'cancelled' %}bg-red-500/20 text-red-500
+                                {% elif order.status == 'processing' %}bg-yellow-500/20 text-yellow-500
+                                {% else %}bg-blue-500/20 text-blue-500{% endif %}">
+                                {% if order.status == 'completed' %}Completado
+                                {% elif order.status == 'cancelled' %}Cancelado
+                                {% elif order.status == 'processing' %}En proceso
+                                {% else %}Pendiente{% endif %}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-400">
+                            {{ order.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-400">Total</p>
+                        <p class="text-2xl font-bold text-green-500">${{ "%.2f"|format(order.total_amount) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalles de la cuenta si está disponible -->
+            {% if order.status == 'completed' and order.account_details %}
+            <div class="p-6 bg-gray-800/50">
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h3 class="font-bold mb-3 flex items-center text-green-500">
+                        <i class="fas fa-key mr-2"></i>
+                        Detalles de tu cuenta
+                    </h3>
+                    <pre class="text-sm text-gray-300 whitespace-pre-wrap font-mono bg-gray-800 p-4 rounded-lg">{{ order.account_details }}</pre>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Pie del pedido -->
+            <div class="px-6 py-4 bg-gray-700/30 flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-{{ 'credit-card' if order.payment_method == 'credit' 
+                                    else 'bitcoin' if order.payment_method == 'binance'
+                                    else 'university' }} 
+                       text-gray-400 mr-2"></i>
+                    <span class="text-sm text-gray-400">
+                        {% if order.payment_method == 'credit' %}
+                            Pago con créditos
+                        {% elif order.payment_method == 'binance' %}
+                            Pago con USDT
+                        {% else %}
+                            Transferencia/OXXO
+                        {% endif %}
+                    </span>
+                </div>
+                <button onclick="showOrderDetails({{ order.id }})" 
+                        class="text-blue-400 hover:text-blue-300 text-sm flex items-center">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Ver detalles
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-gray-800 rounded-xl p-8 text-center">
+        <i class="fas fa-shopping-cart text-4xl text-gray-600 mb-4"></i>
+        <h2 class="text-xl font-bold mb-2">No tienes pedidos aún</h2>
+        <p class="text-gray-400 mb-4">¡Explora nuestra tienda y encuentra productos increíbles!</p>
+        <a href="{{ url_for('index') }}" 
+           class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition">
+            Ir a la tienda
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de detalles -->
+<div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 max-w-lg w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Detalles del Pedido</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="orderDetails" class="space-y-4">
+            <!-- Los detalles se cargarán dinámicamente -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function showOrderDetails(orderId) {
+    try {
+        const response = await fetch(`/order/${orderId}/details`);
+        const data = await response.json();
+        
+        const detailsHtml = `
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm text-gray-400">ID de Pedido</p>
+                        <p class="font-bold">#${orderId}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Estado</p>
+                        <p class="font-bold">${data.status}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Método de pago</p>
+                        <p class="font-bold">${data.payment_method}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Total</p>
+                        <p class="text-green-500 font-bold">$${data.total_amount}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Fecha</p>
+                        <p class="font-bold">${data.created_at}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('orderDetails').innerHTML = detailsHtml;
+        document.getElementById('orderModal').classList.remove('hidden');
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar los detalles del pedido');
+    }
+}
+
+function closeModal() {
+    document.getElementById('orderModal').classList.add('hidden');
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('orderModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

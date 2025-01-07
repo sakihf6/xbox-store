@@ -1,0 +1,168 @@
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Xbox Store{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --color-dark: #021024;
+            --color-primary: #052659;
+            --color-secondary: #5483B3;
+            --color-accent: #7DA0CA;
+            --color-light: #C1E8FF;
+        }
+        body {
+            background-color: var(--color-dark);
+            color: var(--color-light);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-[#021024]/80 backdrop-blur-lg border-b border-[#052659]">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('index') }}" class="flex items-center">
+                        <i class="fa-brands fa-xbox text-2xl text-[#7DA0CA]"></i>
+                        <span class="ml-2 text-xl font-bold text-[#C1E8FF]">FINNGGAMES</span>
+                    </a>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-6">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin') }}" 
+                           class="text-green-500 hover:text-green-400 transition flex items-center">
+                            <i class="fas fa-cog mr-2"></i>
+                            <span class="text-sm">Panel Admin</span>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('user_dashboard') }}" 
+                           class="text-green-500 hover:text-green-400 transition flex items-center">
+                            <i class="fas fa-user mr-2"></i>
+                            <span class="text-sm">Mi Cuenta</span>
+                        </a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" 
+                       class="text-red-500 hover:text-red-400 transition flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        <span class="text-sm">Salir</span>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('user_login') }}" 
+                       class="text-gray-400 hover:text-green-500 transition flex items-center">
+                        <i class="fas fa-user mr-2"></i>
+                        <span class="text-sm">Iniciar Sesión</span>
+                    </a>
+                    <a href="{{ url_for('register') }}" 
+                       class="bg-green-600 hover:bg-black-700 text-yellow px-4 py-2 rounded-lg transition">
+                        Crear Cuenta
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+        <!-- Menú móvil expandible -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 bg-[#052659]">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('view_cart') }}" class="block px-3 py-2 text-[#C1E8FF] hover:bg-[#5483B3] rounded-lg">
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        Carrito
+                    </a>
+                    <a href="{{ url_for('user_dashboard') }}" class="block px-3 py-2 text-[#C1E8FF] hover:bg-[#5483B3] rounded-lg">
+                        <i class="fas fa-user mr-2"></i>
+                        Mi Cuenta
+                    </a>
+                    <a href="{{ url_for('user_orders') }}" class="block px-3 py-2 text-[#C1E8FF] hover:bg-[#5483B3] rounded-lg">
+                        <i class="fas fa-shopping-bag mr-2"></i>
+                        Mis Pedidos
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin') }}" class="block px-3 py-2 text-[#C1E8FF] hover:bg-[#5483B3] rounded-lg">
+                        <i class="fas fa-cog mr-2"></i>
+                        Panel Admin
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="block px-3 py-2 text-red-400 hover:bg-[#5483B3] rounded-lg">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Cerrar Sesión
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('user_login') }}" class="block px-3 py-2 text-[#C1E8FF] hover:bg-[#5483B3] rounded-lg">
+                        Iniciar Sesión
+                    </a>
+                    <a href="{{ url_for('register') }}" class="block px-3 py-2 text-[#C1E8FF] hover:bg-[#5483B3] rounded-lg">
+                        Registrarse
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="flex-grow pt-16">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#021024] border-t border-[#052659] mt-8">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-[#C1E8FF] mb-4">FINNGGAMES</h3>
+                    <p class="text-[#7DA0CA]">Tu mejor opción en servicios digitales</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-[#C1E8FF] mb-4">Enlaces Rápidos</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{{ url_for('index') }}" class="text-[#7DA0CA] hover:text-[#C1E8FF]">Inicio</a></li>
+                        {% if current_user.is_authenticated %}
+                            <li><a href="{{ url_for('user_orders') }}" class="text-[#7DA0CA] hover:text-[#C1E8FF]">Mis Pedidos</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('user_login') }}" class="text-[#7DA0CA] hover:text-[#C1E8FF]">Iniciar Sesión</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-[#C1E8FF] mb-4">Contacto</h3>
+                    <ul class="space-y-2">
+                        <li class="text-[#7DA0CA]">WhatsApp: +52 7541085151</li>
+                        <li class="text-[#7DA0CA]">Facebook: FINNGGAMES</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-[#052659] mt-8 pt-8 text-center">
+                <p class="text-[#7DA0CA]">&copy; 2024 FINNGGAMES. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Menú móvil
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

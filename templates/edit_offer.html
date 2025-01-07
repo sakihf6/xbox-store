@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Editar' if offer else 'Nueva' }} Oferta - Xbox Store</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white">
+    <nav class="bg-black/90 backdrop-blur-md fixed w-full z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="/api/placeholder/40/40" alt="Logo" class="h-10">
+                    <span class="ml-3 text-xl font-bold text-green-500">
+                        {{ 'Editar' if offer else 'Nueva' }} Oferta
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('admin_offers') }}" class="text-gray-400 hover:text-green-500 transition">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mx-auto px-6 pt-24 pb-12">
+        <div class="max-w-2xl mx-auto bg-gray-800 rounded-xl p-6">
+            <form method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <form method="POST" class="space-y-6">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div>
+                        <label class="block text-gray-300 mb-2" for="title">Título de la Oferta</label>
+                        <input type="text" id="title" name="title" 
+                               value="{{ offer.title if offer else '' }}"
+                               class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                               required>
+                    </div>
+                
+                    <div>
+                        <label class="block text-gray-300 mb-2" for="description">Características (una por línea)</label>
+                        <textarea id="description" name="description" rows="4"
+                                  class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                                  placeholder="Game Pass Ultimate incluido&#10;+100 juegos para consola y PC&#10;EA Play incluido&#10;Juegos día 1 de lanzamiento"
+                                  required>{{ offer.description if offer else '' }}</textarea>
+                    </div>
+                
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-300 mb-2" for="regular_price">Precio Regular ($)</label>
+                            <input type="number" step="0.01" id="regular_price" name="regular_price"
+                                   value="{{ "%.2f"|format(offer.regular_price) if offer else '' }}"
+                                   class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                                   required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2" for="price">Precio de Oferta ($)</label>
+                            <input type="number" step="0.01" id="price" name="price"
+                                   value="{{ "%.2f"|format(offer.price) if offer else '' }}"
+                                   class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                                   required>
+                        </div>
+                    </div>
+                
+                    <div>
+                        <label class="block text-gray-300 mb-2" for="whatsapp_link">Enlace de WhatsApp</label>
+                        <input type="text" id="whatsapp_link" name="whatsapp_link"
+                               value="{{ offer.whatsapp_link if offer else '' }}"
+                               class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
+                               required>
+                    </div>
+                
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="is_active" name="is_active" 
+                               class="w-4 h-4 text-green-500 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
+                               {% if not offer or offer.is_active %}checked{% endif %}>
+                        <label class="text-gray-300" for="is_active">Oferta activa</label>
+                    </div>
+                
+                    <div class="flex justify-end space-x-4">
+                        <a href="{{ url_for('admin_offers') }}" 
+                           class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                            Cancelar
+                        </a>
+                        <button type="submit" 
+                                class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                            {{ 'Guardar Cambios' if offer else 'Crear Oferta' }}
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Sección de imagen -->
+                <div>
+                    <label class="block text-gray-300 mb-2">Imagen de la Oferta</label>
+                    <div class="flex items-start space-x-4">
+                        {% if offer and offer.image_url %}
+                        <div class="w-32 h-32 relative group">
+                            <img src="{{ url_for('static', filename=offer.image_url.replace('static/', '')) }}" 
+                                 alt="{{ offer.title }}"
+                                 class="w-full h-full object-cover rounded-lg border border-gray-600">
+                            <form action="{{ url_for('upload_offer_image', id=offer.id) }}" 
+                                  method="POST" 
+                                  enctype="multipart/form-data"
+                                  class="hidden group-hover:flex absolute inset-0 bg-black/50 items-center justify-center rounded-lg">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <label class="cursor-pointer text-white hover:text-green-500 transition">
+                                    <i class="fas fa-camera text-2xl"></i>
+                                    <input type="file" name="image" class="hidden" onchange="this.form.submit()" accept="image/*">
+                                </label>
+                            </form>
+                        </div>
+                        {% else %}
+                        <form action="{{ url_for('upload_offer_image', id=offer.id if offer else 0) }}" 
+                              method="POST" 
+                              enctype="multipart/form-data"
+                              class="w-32 h-32 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center cursor-pointer hover:border-green-500 transition">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <label class="cursor-pointer text-gray-400 hover:text-green-500 transition text-center">
+                                <i class="fas fa-cloud-upload-alt text-2xl mb-2"></i>
+                                <p class="text-sm">Subir imagen</p>
+                                <input type="file" name="image" class="hidden" onchange="this.form.submit()" accept="image/*">
+                            </label>
+                        </form>
+                        {% endif %}
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-400">
+                                Formatos permitidos: PNG, JPG, JPEG, GIF<br>
+                                Tamaño recomendado: 600x400 píxeles<br>
+                                Peso máximo: 2MB
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vista previa -->
+    <div class="container mx-auto px-6 pb-12">
+        <div class="max-w-2xl mx-auto">
+            <h3 class="text-xl font-bold mb-4">Vista Previa</h3>
+            <div class="bg-gray-800 rounded-xl overflow-hidden">
+                {% if offer and offer.image_url %}
+                <img src="{{ url_for('static', filename=offer.image_url.replace('static/', '')) }}" 
+                     alt="{{ offer.title if offer else 'Nueva oferta' }}"
+                     class="w-full h-64 object-cover">
+                {% endif %}
+                <div class="p-6">
+                    <h4 class="text-2xl font-bold mb-2" id="previewTitle">
+                        {{ offer.title if offer else 'Título de la oferta' }}
+                    </h4>
+                    <p class="text-gray-400 mb-4" id="previewDescription">
+                        {{ offer.description if offer else 'Descripción de la oferta' }}
+                    </p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-3xl font-bold text-green-500" id="previewPrice">
+                                ${{ "%.2f"|format(offer.price) if offer else '0.00' }}
+                            </span>
+                            <span class="text-lg text-gray-400 line-through ml-2" id="previewRegularPrice">
+                                ${{ "%.2f"|format(offer.regular_price) if offer else '0.00' }}
+                            </span>
+                        </div>
+                        <a href="#" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
+                            <i class="fab fa-whatsapp mr-2"></i>
+                            Comprar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Actualización en tiempo real de la vista previa
+        document.getElementById('title').addEventListener('input', function(e) {
+            document.getElementById('previewTitle').textContent = e.target.value || 'Título de la oferta';
+        });
+
+        document.getElementById('description').addEventListener('input', function(e) {
+            document.getElementById('previewDescription').textContent = e.target.value || 'Descripción de la oferta';
+        });
+
+        document.getElementById('price').addEventListener('input', function(e) {
+            document.getElementById('previewPrice').textContent = '$' + (parseFloat(e.target.value) || 0).toFixed(2);
+        });
+
+        document.getElementById('regular_price').addEventListener('input', function(e) {
+            document.getElementById('previewRegularPrice').textContent = '$' + (parseFloat(e.target.value) || 0).toFixed(2);
+        });
+    </script>
+
+    {% include 'flash_messages.html' %}
+</body>
+</html>

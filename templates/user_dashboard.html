@@ -1,71 +1,113 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Cuenta - Xbox Store</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-900 text-white">
-    <!-- Navbar -->
-    <nav class="bg-black/90 backdrop-blur-md fixed w-full z-50">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <img src="/api/placeholder/40/40" alt="Logo" class="h-10">
-                    <span class="ml-3 text-xl font-bold text-green-500">Mi Cuenta - Xbox Store</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="{{ url_for('index') }}" class="text-gray-400 hover:text-green-500 transition">
-                        <i class="fas fa-store mr-2"></i>
-                        Ver Tienda
-                    </a>
-                    <a href="{{ url_for('logout') }}" class="text-red-500 hover:text-red-400 transition">
-                        <i class="fas fa-sign-out-alt mr-2"></i>
-                        Cerrar Sesión
-                    </a>
-                </div>
+{% extends "base.html" %}
+
+{% block title %}Mi Panel - Xbox Store{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 pt-24 pb-12">
+    <!-- Tarjeta de Bienvenida -->
+    <div class="bg-gradient-to-r from-blue-600 to-yellow-800 rounded-xl p-6 mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold mb-2">¡Bienvenido, {{ current_user.username }}!</h1>
+                <p class="text-gray-200">Aquí puedes gestionar tu cuenta y ver tus pedidos.</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-200">Tu saldo actual</p>
+                <p class="text-3xl font-bold">${{ "%.2f"|format(current_user.credit) }}</p>
             </div>
         </div>
-    </nav>
+    </div>
 
     <!-- Contenido Principal -->
-    <div class="container mx-auto px-6 pt-24 pb-12">
-        <!-- Tarjeta de Bienvenida -->
-        <div class="bg-gradient-to-r from-green-600 to-green-800 rounded-xl p-6 mb-8">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold mb-2">¡Bienvenido, {{ current_user.username }}!</h1>
-                    <p class="text-gray-200">Aquí puedes gestionar tu cuenta y canjear códigos.</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-sm text-gray-200">Tu saldo actual</p>
-                    <p class="text-3xl font-bold">${{ "%.2f"|format(current_user.credit) }}</p>
-                </div>
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- Sección de Pedidos -->
+        <div class="bg-gray-800 rounded-xl overflow-hidden">
+            <div class="p-6 border-b border-gray-700">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-shopping-cart text-green-500 mr-3"></i>
+                    Mis Pedidos
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                {% set user_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).limit(5).all() %}
+                {% if user_orders %}
+                    <div class="space-y-4">
+                        {% for order in user_orders %}
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <span class="text-sm text-gray-400">Pedido #{{ order.id }}</span>
+                                    <p class="text-green-500 font-bold">${{ "%.2f"|format(order.total_amount) }}</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs
+                                    {% if order.status == 'completed' %}bg-green-500/20 text-green-500
+                                    {% elif order.status == 'cancelled' %}bg-red-500/20 text-red-500
+                                    {% elif order.status == 'processing' %}bg-yellow-500/20 text-yellow-500
+                                    {% else %}bg-blue-500/20 text-blue-500{% endif %}">
+                                    {{ order.status|title }}
+                                </span>
+                            </div>
+
+                            <!-- Detalles de la cuenta si está disponible -->
+                            {% if order.status == 'completed' and order.account_details %}
+                            <div class="mt-3 p-3 bg-gray-800 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-key text-green-500 mr-2"></i>
+                                    <span class="text-sm font-bold">Detalles de la Cuenta</span>
+                                </div>
+                                <pre class="text-sm text-gray-300 whitespace-pre-wrap font-mono">{{ order.account_details }}</pre>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-3 text-right">
+                                <button onclick="showOrderDetails('{{ order.id }}')"
+                                        class="text-blue-400 hover:text-blue-300 text-sm">
+                                    Ver detalles
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 text-center">
+                        <a href="{{ url_for('user_orders') }}" class="text-blue-400 hover:text-blue-300">
+                            Ver todos mis pedidos →
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-shopping-bag text-4xl text-gray-600 mb-4"></i>
+                        <p class="text-gray-400">No tienes pedidos aún</p>
+                        <a href="{{ url_for('index') }}" class="text-blue-400 hover:text-blue-300 mt-2 inline-block">
+                            Ir a la tienda
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-8">
-            <!-- Sección de Canje de Códigos -->
-            <div class="bg-gray-800 rounded-xl p-6">
-                <div class="flex items-center mb-6">
-                    <i class="fas fa-gift text-2xl text-green-500 mr-3"></i>
-                    <h2 class="text-2xl font-bold">Canjear Código</h2>
-                </div>
-                
-                <form action="{{ url_for('redeem_code') }}" method="POST" class="space-y-4">
+        <!-- Sección de Canje de Códigos -->
+        <div class="bg-gray-800 rounded-xl overflow-hidden">
+            <div class="p-6 border-b border-gray-700">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-gift text-green-500 mr-3"></i>
+                    Canjear Código
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                <form id="redeemForm" class="space-y-4">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div>
-                        <label class="block text-gray-300 mb-2" for="code">Ingresa tu código</label>
-                        <input type="text" id="code" name="code" 
-                               class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-20 focus:outline-none"
-                               required placeholder="Ejemplo: XBOX-1234-5678">
+                        <label class="block text-gray-300 mb-2" for="codeInput">Ingresa tu código</label>
+                        <input type="text" id="codeInput" name="code" 
+                               class="w-full px-4 py-3 bg-gray-700 rounded-lg border border-gray-600 text-white focus:border-green-500 focus:ring-2 focus:ring-green-500"
+                               required placeholder="Ejemplo: FNNGG-XXXXX-XXXXX">
                     </div>
                     <button type="submit" 
-                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                            class="w-full bg-blue-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center">
                         <i class="fas fa-check-circle mr-2"></i>
-                        Canjear Código
+                        Verificar Código
                     </button>
                 </form>
 
@@ -76,62 +118,159 @@
                     </h3>
                     <ol class="list-decimal list-inside text-gray-300 space-y-2 text-sm">
                         <li>Ingresa el código que recibiste</li>
-                        <li>Haz clic en "Canjear Código"</li>
-                        <li>El saldo se agregará automáticamente a tu cuenta</li>
+                        <li>Verifica que el monto sea correcto</li>
+                        <li>Confirma el canje para recibir tu saldo</li>
                     </ol>
-                </div>
-            </div>
-
-            <!-- Historial de Canjes -->
-            <div class="bg-gray-800 rounded-xl p-6">
-                <div class="flex items-center mb-6">
-                    <i class="fas fa-history text-2xl text-green-500 mr-3"></i>
-                    <h2 class="text-2xl font-bold">Historial de Canjes</h2>
-                </div>
-
-                <div class="space-y-4">
-                    {% set codes = RedeemCode.query.filter_by(used_by=current_user.id).order_by(RedeemCode.used_at.desc()).all() %}
-                    {% if codes %}
-                        {% for code in codes %}
-                            <div class="bg-gray-700/50 rounded-lg p-4">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <span class="text-green-500 font-bold text-lg">
-                                            ${{ "%.2f"|format(code.amount) }}
-                                        </span>
-                                        <p class="text-sm text-gray-400">
-                                            {{ code.used_at.strftime('%d/%m/%Y %H:%M') }}
-                                        </p>
-                                    </div>
-                                    <span class="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-sm">
-                                        Canjeado
-                                    </span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center py-8 text-gray-400">
-                            <i class="fas fa-scroll text-4xl mb-4"></i>
-                            <p>No hay códigos canjeados aún</p>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    {% include 'flash_messages.html' %}
+<!-- Modal de Detalles del Pedido -->
+<div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 max-w-lg w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Detalles del Pedido</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="orderDetails" class="space-y-4">
+            <!-- Los detalles se cargarán dinámicamente -->
+        </div>
+    </div>
+</div>
 
-    <script>
-        // Auto-ocultar mensajes flash después de 5 segundos
-        setTimeout(() => {
-            const flashMessages = document.querySelectorAll('.bg-green-500, .bg-red-500');
-            flashMessages.forEach(message => {
-                message.style.opacity = '0';
-                message.style.transition = 'opacity 0.5s ease-in-out';
-                setTimeout(() => message.remove(), 500);
-            });
-        }, 5000);
-    </script>
-</body>
-</html>
+<!-- Modal de Confirmación de Canje -->
+<div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold mb-4">Confirmar Canje</h3>
+        <div class="bg-gray-700 rounded-lg p-4 mb-6">
+            <div class="mb-3">
+                <span class="text-sm text-gray-400">Código:</span>
+                <p id="previewCode" class="font-mono font-bold"></p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-400">Recibirás:</span>
+                <p id="previewAmount" class="text-2xl font-bold text-green-500"></p>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3">
+            <button onclick="closePreviewModal()" 
+                    class="px-4 py-2 bg-gray-600 text-gray-200 rounded-lg hover:bg-gray-500">
+                Cancelar
+            </button>
+            <form id="confirmRedeemForm" action="{{ url_for('redeem_code') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="code" id="confirmCodeInput">
+                <button type="submit" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500">
+                    Confirmar Canje
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Modal de detalles del pedido
+async function showOrderDetails(orderId) {
+    try {
+        const response = await fetch(`/order/${orderId}/details`);
+        const data = await response.json();
+        
+        const detailsHtml = `
+            <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm text-gray-400">ID de Pedido</p>
+                        <p class="font-bold">#${orderId}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Estado</p>
+                        <p class="font-bold">${data.status}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Método de pago</p>
+                        <p class="font-bold">${data.payment_method}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Total</p>
+                        <p class="text-green-500 font-bold">$${data.total_amount}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Fecha</p>
+                        <p class="font-bold">${data.created_at}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('orderDetails').innerHTML = detailsHtml;
+        document.getElementById('orderModal').classList.remove('hidden');
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error al cargar los detalles del pedido', 'error');
+    }
+}
+
+function closeModal() {
+    document.getElementById('orderModal').classList.add('hidden');
+}
+
+// Manejo del formulario de canje
+document.getElementById('redeemForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const code = document.getElementById('codeInput').value;
+    
+    try {
+        const response = await fetch(`/preview-code/${code}`);
+        const data = await response.json();
+        
+        if (data.valid) {
+            document.getElementById('previewCode').textContent = data.masked_code;
+            document.getElementById('previewAmount').textContent = `$${data.amount.toFixed(2)}`;
+            document.getElementById('confirmCodeInput').value = code;
+            document.getElementById('previewModal').classList.remove('hidden');
+        } else {
+            showMessage('Código inválido o ya utilizado', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error al verificar el código', 'error');
+    }
+});
+
+function closePreviewModal() {
+    document.getElementById('previewModal').classList.add('hidden');
+    document.getElementById('codeInput').value = '';
+}
+
+function showMessage(message, type = 'success') {
+    const div = document.createElement('div');
+    div.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white transition-opacity duration-300 ${
+        type === 'error' ? 'bg-red-500' : 'bg-green-500'
+    }`;
+    div.textContent = message;
+    document.body.appendChild(div);
+    
+    setTimeout(() => {
+        div.style.opacity = '0';
+        setTimeout(() => div.remove(), 300);
+    }, 3000);
+}
+
+// Cerrar modales al hacer clic fuera
+document.querySelectorAll('.fixed').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

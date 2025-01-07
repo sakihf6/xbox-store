@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Carrito - TZILGAMES{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 pt-24 pb-12">
+    <div class="max-w-6xl mx-auto">
+        <!-- Encabezado -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-[#C1E8FF] mb-2">Tu Carrito</h1>
+            <p class="text-[#7DA0CA]">Revisa tus productos y completa tu compra</p>
+        </div>
+
+        {% if not cart or not cart.items %}
+        <!-- Carrito Vacío -->
+        <div class="glass-effect rounded-xl p-8 text-center border-2 border-[#052659]/50 shadow-lg shadow-[#052659]/10">
+            <div class="mb-4">
+                <i class="fas fa-shopping-cart text-4xl text-[#5483B3]"></i>
+            </div>
+            <h2 class="text-xl font-bold text-[#C1E8FF] mb-4">Tu carrito está vacío</h2>
+            <p class="text-[#7DA0CA] mb-6">¡Explora nuestros productos y encuentra algo increíble!</p>
+            <a href="{{ url_for('index') }}" 
+               class="bg-[#052659] hover:bg-[#5483B3] text-[#C1E8FF] px-6 py-3 rounded-lg transition-all inline-flex items-center shine-effect border border-[#5483B3]/50">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Ir a la tienda
+            </a>
+        </div>
+        {% else %}
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Lista de Productos -->
+            <div class="lg:col-span-2 space-y-4">
+                {% for item in cart.items %}
+                <div class="glass-effect rounded-xl p-6 border-2 border-[#052659]/50 hover:border-[#5483B3]/50 transition-all shadow-lg shadow-[#052659]/10">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-xl font-bold text-[#C1E8FF] mb-2">{{ item.product.name }}</h3>
+                            <p class="text-[#7DA0CA] text-sm mb-4">{{ item.product.description }}</p>
+                            
+                            <div class="flex items-center space-x-4">
+                                <form action="{{ url_for('update_cart_item', item_id=item.id) }}" method="POST" 
+                                      class="flex items-center space-x-2">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="number" 
+                                           name="quantity" 
+                                           value="{{ item.quantity }}" 
+                                           min="1" 
+                                           class="bg-[#021024] border border-[#052659] rounded px-3 py-1 w-20 text-[#C1E8FF] focus:border-[#5483B3] focus:ring-1 focus:ring-[#5483B3] outline-none">
+                                    <button type="submit" 
+                                            class="bg-[#052659] hover:bg-[#5483B3] text-[#C1E8FF] px-4 py-1 rounded transition-all border border-[#5483B3]/30">
+                                        Actualizar
+                                    </button>
+                                </form>
+                                
+                                <form action="{{ url_for('update_cart_item', item_id=item.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="quantity" value="0">
+                                    <button type="submit" 
+                                            class="text-red-400 hover:text-red-300 transition-all hover:underline">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="text-right bg-[#052659]/20 p-3 rounded-lg border border-[#052659]/50">
+                            <p class="text-2xl font-bold text-[#C1E8FF]">${{ "%.2f"|format(item.subtotal) }}</p>
+                            <p class="text-sm text-[#7DA0CA]">${{ "%.2f"|format(item.product.price) }} c/u</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Resumen y Pago -->
+            <div class="glass-effect rounded-xl p-6 h-fit border-2 border-[#052659]/50 shadow-lg shadow-[#052659]/10">
+                <h3 class="text-xl font-bold text-[#C1E8FF] mb-6">Resumen del pedido</h3>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex justify-between text-[#7DA0CA] bg-[#052659]/20 p-3 rounded-lg border border-[#052659]/50">
+                        <span>Subtotal</span>
+                        <span>${{ "%.2f"|format(cart.total) }}</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-[#C1E8FF] text-xl p-4 bg-[#052659]/30 rounded-lg border border-[#052659]/50">
+                        <span>Total</span>
+                        <span>${{ "%.2f"|format(cart.total) }}</span>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('checkout') }}" method="POST" class="space-y-6">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <!-- Métodos de pago -->
+                    <div class="space-y-3">
+                        <label class="block text-[#C1E8FF] font-bold mb-2">Método de pago</label>
+                        
+                        <!-- Créditos -->
+                        <div class="glass-effect rounded-lg p-4 border border-[#052659]/50 hover:border-[#5483B3]/50 transition-all">
+                            <label class="flex items-start space-x-3 cursor-pointer">
+                                <input type="radio" 
+                                       name="payment_method" 
+                                       value="credit"
+                                       {% if current_user.credit >= cart.total %}checked{% else %}disabled{% endif %}
+                                       class="mt-1">
+                                <div class="flex-1">
+                                    <div class="text-[#C1E8FF] font-medium">Créditos disponibles</div>
+                                    <div class="text-sm text-[#7DA0CA]">
+                                        Saldo: ${{ "%.2f"|format(current_user.credit) }}
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Transferencia -->
+                        <div class="glass-effect rounded-lg p-4 border border-[#052659]/50 hover:border-[#5483B3]/50 transition-all">
+                            <label class="flex items-start space-x-3 cursor-pointer">
+                                <input type="radio" 
+                                       name="payment_method" 
+                                       value="bank_transfer"
+                                       class="mt-1">
+                                <div class="flex-1">
+                                    <div class="text-[#C1E8FF] font-medium">Transferencia bancaria/Deposito en OXXO</div>
+                                    <div class="text-sm text-[#7DA0CA]">
+                                        SPEI o depósito bancario
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Binance -->
+                        <div class="glass-effect rounded-lg p-4 border border-[#052659]/50 hover:border-[#5483B3]/50 transition-all">
+                            <label class="flex items-start space-x-3 cursor-pointer">
+                                <input type="radio" 
+                                       name="payment_method" 
+                                       value="binance"
+                                       class="mt-1">
+                                <div class="flex-1">
+                                    <div class="text-[#C1E8FF] font-medium">Binance USDT</div>
+                                    <div class="text-sm text-[#7DA0CA]">
+                                        TRC20 Network
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-[#052659] hover:bg-[#5483B3] text-[#C1E8FF] py-3 rounded-lg transition-all shine-effect font-bold border border-[#5483B3]/50">
+                        Completar compra
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <a href="{{ url_for('index') }}" class="text-[#7DA0CA] hover:text-[#C1E8FF] transition-all text-sm hover:underline">
+                        ← Seguir comprando
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Input radio personalizado */
+    input[type="radio"] {
+        width: 1.2em;
+        height: 1.2em;
+        background-color: #021024;
+        border: 2px solid #052659;
+        border-radius: 50%;
+        appearance: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    input[type="radio"]:checked {
+        border-color: #5483B3;
+        background-color: #5483B3;
+        box-shadow: 0 0 10px #5483B3/50;
+    }
+
+    input[type="radio"]:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
