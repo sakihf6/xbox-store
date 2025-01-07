@@ -27,6 +27,10 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'user_login'
 csrf = CSRFProtect(app)
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 # Modelos
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -151,11 +155,6 @@ class Order(db.Model):
             'cancelled': 'Cancelado'
         }
         return status_display.get(self.status, self.status)
-
-
-@app.before_first_request
-def create_tables():
-    db.create_all()
 
 # Agrega estas rutas para manejar las ofertas
 @app.route('/admin/offers')
